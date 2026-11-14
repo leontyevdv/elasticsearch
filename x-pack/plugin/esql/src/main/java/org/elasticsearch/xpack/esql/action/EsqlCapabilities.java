@@ -1594,9 +1594,10 @@ public class EsqlCapabilities {
         SUBQUERY_IN_FROM_COMMAND_FORK_NULL_FILL_DATE_NANOS,
 
         /**
-         * EVAL fields overwritten by an IN subquery are appended at the end of the output, matching ordinary EVAL shadowing.
+         * A FORK may follow a subquery, a view or a LET binding that itself contains a FORK. Each of them is its own FORK scope, so the
+         * two FORKs are not consecutive on one pipeline. Two FORKs the user wrote on the same pipeline are still rejected while parsing.
          */
-        EVAL_IN_SUBQUERY_OVERWRITE_APPENDED,
+        ALLOW_FORK_ACROSS_SUBQUERY_VIEW_LET_BOUNDARY,
 
         /**
          * Support IN non-correlated subqueries in WHERE command.
@@ -1690,6 +1691,11 @@ public class EsqlCapabilities {
          * Support non-correlated IN subqueries in the {@code EVAL} command.
          */
         EVAL_IN_SUBQUERY,
+
+        /**
+         * EVAL fields overwritten by an IN subquery are appended at the end of the output, matching ordinary EVAL shadowing.
+         */
+        EVAL_IN_SUBQUERY_OVERWRITE_APPENDED,
 
         /**
          * Support IN non-correlated subqueries inside the STATS command's per-aggregate WHERE filter, e.g.
@@ -4724,6 +4730,12 @@ public class EsqlCapabilities {
          * for these aggregations when another metric was aggregated in the same {@code STATS}.
          */
         FIX_TS_NULL_FILTER_ON_COMPUTED_INPUTS,
+
+        /**
+         * TS null filtering follows aliases through null-propagating expressions, such as casts and arithmetic, to the metric
+         * fields they read. Converted or computed metrics receive the same null filtering as mapped metric fields.
+         */
+        TS_NULL_FILTER_THROUGH_EXPRESSIONS,
 
         /**
          * {@code DEDUP} ignores the synthetic {@code $$<field>$converted_to$<type>} attributes that a conversion pushed into
